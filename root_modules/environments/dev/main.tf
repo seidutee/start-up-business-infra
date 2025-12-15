@@ -169,7 +169,7 @@ module "ec2" {
 
 # Add Auto Scaling Group module using the ASG variables
 module "asg" {
-  source = "../../../modules/ASG"
+  source = "../../../modules/asg"
 
   resource_prefix      = "CBG-Dev"
   ami_id               = "ami-08b5b3a93ed654d19"           # pick the AMI you want the ASG to use
