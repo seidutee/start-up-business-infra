@@ -11,7 +11,7 @@ permissions:
 env:
   TF_LOG: INFO
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  working-directory: /root_modules/environments/dev
+  working-directory: root_modules/environments/dev
   terraform_version: 1.6.6
   
 jobs:
