@@ -1,0 +1,69 @@
+name: "Terraform Destroy - Dev Environment"
+
+# 🧠 Trigger: Manual only, via GitHub UI → Actions → Run workflow
+on:
+  workflow_dispatch:       # <---- manual trigger only
+
+permissions:
+  id-token: write          # Required for AWS OIDC connection
+  contents: read           # Required for actions/checkout
+  pull-requests: write     # Optional, for PR commenting if ever reused
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  working-directory: root_modules/environments/dev
+  terraform_version: 1.6.6
+
+jobs:
+  destroy:
+    name: Destroy Dev Environment
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # --- Checkout Repository ---
+      - name: Git Checkout
+        uses: actions/checkout@v3
+
+      # --- Configure AWS Credentials via OIDC ---
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      # --- Setup Terraform CLI ---
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.terraform_version }}
+
+      # --- Terraform Format Check (optional safety step) ---
+      - name: Terraform FMT
+        id: fmt
+        working-directory: ${{ env.working-directory }}
+        run: terraform fmt -check
+        continue-on-error: true
+
+      # --- Terraform Init ---
+      - name: Terraform Init
+        id: init
+        working-directory: ${{ env.working-directory }}
+        run: terraform init -upgrade
+
+      # --- Terraform Validate ---
+      - name: Terraform Validate
+        id: validate
+        working-directory: ${{ env.working-directory }}
+        run: terraform validate -no-color
+
+      # --- ⚠️ Terraform Destroy (manual only) ---
+      - name: Terraform Destroy
+        id: destroy
+        working-directory: ${{ env.working-directory }}
+        run: terraform destroy -auto-approve -input=false
+      
