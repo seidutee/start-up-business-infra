@@ -1,156 +1,100 @@
 # Workflow Name
-
 name: "terraform-infra-startup"
- 
+
 # Workflow Triggers
-
 on:
-
   push:
-
     branches:
-
       - main
-
-    paths:  
-
+    paths:
       - start-up-business-infra/**
-
+  pull_request: # <-- Removed branch restriction so all PRs trigger
+    paths:
+      - start-up-business-infra/**
   workflow_dispatch: # Enables manual trigger for destroy job
- 
+
+# Permissions
 permissions:
   id-token: write          # Required for AWS OIDC connection
   contents: read           # Required for actions/checkout
 
-
 # Environment Variables
-
 env:
-
   AWS_REGION: ${{ secrets.AWS_REGION }}
   working-directory: root_modules/environments/dev
   terraform_version: 1.6.6
   AWS_ROLE: ${{ secrets.AWS_ROLE }}
 
-
 # Define Jobs
-
 jobs:
 
   plan:
-
-    name: "Deploy Infra with Terraform on AWS"
-
+    name: "Terraform Plan"
     runs-on: ubuntu-latest
 
-    # Run only on push events
+    # Run only on pull_request events
+    if: github.event_name == 'pull_request'
 
-    if: github.event_name == 'pull_request'  
- 
-    defaults:
-
-      run:
-
-        shell: bash
-
-        working-directory: ${{ env.working-directory }}
- 
-    steps:
-
-      - name: Checkout source code
-
-        uses: actions/checkout@v4
- 
-      - name: Setup Terraform
-
-        uses: hashicorp/setup-terraform@v3
- 
-      - name: Terraform init
-
-        id: init
-
-        run: terraform init 
- 
-      - name: Terraform validate
-
-        id: validate
-
-        run: terraform validate
- 
-      - name: Terraform plan
-
-        id: plan
-
-        run: terraform plan -no-color -input=false -out planfile
-
-        continue-on-error: true
- 
-      - name: Terraform plan status
-
-        if: steps.plan.outcome == 'failure'
-
-        run: exit 1
- 
-        
-  
-
-  Apply:
-    name: "Deploy Infra with Terraform on AWS"
-    runs-on: ubuntu-latest
-     # Run only on push events
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
- 
     defaults:
       run:
         shell: bash
         working-directory: ${{ env.working-directory }}
- 
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
- 
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
- 
+        with:
+          terraform_version: ${{ env.terraform_version }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
       - name: Terraform init
         id: init
         run: terraform init
-     
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ env.AWS_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-session-name: GitHub-OIDC-TERRAFORM
 
- 
-      - name: Terraform apply
-        id: apply
-        run: terraform apply -auto-approve -input=false -parallelism=1 planfile
- 
- 
-  destroy:
-    name: "Destroy Infra on AWS"
+      - name: Terraform validate
+        id: validate
+        run: terraform validate
+
+      - name: Terraform plan
+        id: plan
+        run: terraform plan -no-color -input=false -out planfile
+        continue-on-error: true
+
+      - name: Terraform plan status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+
+  apply:
+    name: "Terraform Apply"
     runs-on: ubuntu-latest
-    # Only trigger for workflow_dispatch
-    if: github.event_name == 'workflow_dispatch'
- 
+
+    # Run only on push events to main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
     defaults:
       run:
         shell: bash
         working-directory: ${{ env.working-directory }}
- 
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
- 
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
- 
-      - name: Terraform init
-        id: init
-        run: terraform init  
-     
+        with:
+          terraform_version: ${{ env.terraform_version }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -158,8 +102,47 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
- 
+      - name: Terraform init
+        id: init
+        run: terraform init
+
+      - name: Terraform apply
+        id: apply
+        run: terraform apply -auto-approve -input=false -parallelism=1 planfile
+
+
+  destroy:
+    name: "Terraform Destroy"
+    runs-on: ubuntu-latest
+
+    # Only trigger manually
+    if: github.event_name == 'workflow_dispatch'
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.working-directory }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.terraform_version }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      - name: Terraform init
+        id: init
+        run: terraform init
+
       - name: Terraform destroy
         id: destroy
         run: terraform destroy -auto-approve -input=false
- 
