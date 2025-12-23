@@ -14,7 +14,7 @@ on:
 
     paths:  
 
-      - CBG-terraform-infra/**
+      - start-up-business-infra/**
 
   workflow_dispatch: # Enables manual trigger for destroy job
  
