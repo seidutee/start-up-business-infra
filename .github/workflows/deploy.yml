@@ -4,13 +4,7 @@ name: "terraform-infra-startup"
 # Workflow Triggers
 on:
   push:
-    branches:
-      - main
-    paths:
-      - start-up-business-infra/**
   pull_request: # <-- Removed branch restriction so all PRs trigger
-    paths:
-      - start-up-business-infra/**
   workflow_dispatch: # Enables manual trigger for destroy job
 
 # Permissions
