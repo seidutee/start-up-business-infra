@@ -8,4 +8,4 @@ terraform {
     # Native s3 locking!
   }
 }
- 
+#  remote s3 backend configuration
