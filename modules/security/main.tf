@@ -91,6 +91,7 @@ resource "aws_security_group" "web_sg" {
   name        = "${var.ResourcePrefix}-web-sg"
   description = "Security group for Web instances"
   vpc_id      = var.vpc_id  
+  
  
   ingress {
     from_port   = 80
