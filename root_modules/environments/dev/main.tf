@@ -129,7 +129,7 @@ module "ec2" {
   instance_types             = ["t2.micro", "t2.micro", "t2.micro", "t2.micro", "t2.micro"]
   key_name                   = "safoa"
   instance_profile_name      = "admin_role"   #module.iam.rbac_instance_profile
-  public_instance_count      = [1, 0, 0, 0, 0]
+  public_instance_count      = [0, 0, 0, 0, 1]
   private_instance_count     = [0, 0, 0, 0, 0]
  
   tag_value_public_instances = [
