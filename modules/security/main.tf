@@ -91,6 +91,7 @@ resource "aws_security_group" "web_sg" {
   name        = "${var.ResourcePrefix}-web-sg"
   description = "Security group for Web instances"
   vpc_id      = var.vpc_id  
+  
  
   ingress {
     from_port   = 80
@@ -98,6 +99,15 @@ resource "aws_security_group" "web_sg" {
     protocol    = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
+
+  ingress = {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.public_sg_source_cidr
+  }
+
+  egress = {}
  
   egress {
     from_port   = 0
