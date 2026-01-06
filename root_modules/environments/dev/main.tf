@@ -124,7 +124,7 @@ module "ec2" {
   source = "../../../modules/ec2"
  
   ResourcePrefix             = "CBG-Dev"
-  ami_ids                    = ["ami-08b5b3a93ed654d19", "ami-02a53b0d62d37a757", "ami-02e3d076cbd5c28fa", "ami-0c7af5fe939f2677f", "ami-04b4f1a9cf54c11d0"]
+  ami_ids                    = ["ami-068c0051b15cdb816", "ami-02a53b0d62d37a757", "ami-02e3d076cbd5c28fa", "ami-0c7af5fe939f2677f", "ami-04b4f1a9cf54c11d0"]
   ami_names                  = ["AL2023", "AL2", "Windows", "RedHat", "ubuntu"]
   instance_types             = ["t2.micro", "t2.micro", "t2.micro", "t2.micro", "t2.micro"]
   key_name                   = "safoa"
