@@ -1,43 +1,66 @@
 #!/bin/bash
-# ------------------------------------------------------------------
-# Install Docker and Docker Compose on Amazon Linux 2023
-# Tested on: Amazon Linux 2023 (Kernel 6.x)
-# ------------------------------------------------------------------
-
-set -e
-
-echo "🚀 Starting Docker installation on Amazon Linux 2023..."
-
-# Step 1: Update system packages
-echo "🔄 Updating system packages..."
-sudo dnf update -y
-
-# Step 2: Install Docker engine
-echo "🐳 Installing Docker Engine..."
-sudo dnf install -y docker
-
-# Step 3: Enable and start Docker service
-echo "🔧 Enabling and starting Docker service..."
-sudo systemctl enable docker
-sudo systemctl start docker
-
-# Step 4: Add current user to the docker group
-echo "👤 Adding current user ($USER) to the docker group..."
-sudo usermod -aG docker $USER
-
-# Step 5: Install Docker Compose plugin (v2)
-echo "🧩 Installing Docker Compose v2 plugin..."
-sudo dnf install -y docker-compose-plugin
-
-# Step 6: Verify installation
-echo "✅ Verifying Docker installation..."
-docker --version
-docker compose version
-
-echo "🎉 Docker and Docker Compose have been successfully installed!"
-echo ""
-echo "📦 Docker service is running. You can test it with:"
-echo "    docker run hello-world"
-echo ""
-echo "⚠️ Note: You may need to log out and back in for group changes to take effect."
-echo "------------------------------------------------------------------"
+set -euxo pipefail
+ 
+echo "[INFO] Updating system and installing Docker..."
+ 
+# Update system
+dnf update -y
+ 
+# Install Docker
+dnf install -y docker
+ 
+# Enable and start Docker
+systemctl enable --now docker
+ 
+# Add ec2-user to docker group (optional, for non-root usage)
+usermod -aG docker ec2-user || true
+ 
+# Wait until Docker socket is ready
+timeout 30 bash -c 'until docker info >/dev/null 2>&1; do sleep 1; done'
+ 
+echo "[INFO] Running test container..."
+ 
+# Run containers
+docker pull httpd:latest
+docker run -d --name apache-web -p 8080:80 httpd:latest
+ 
+# docker pull nginx:latest
+# docker run -d --name nginx-web -p 80:80 nginx:latest
+ 
+# echo "[INFO] Installing Node Exporter..."
+ 
+# # Create a user for Node Exporter
+# useradd --no-create-home --shell /bin/false node_exporter || true
+ 
+# # Download and install Node Exporter
+# cd /opt/
+# NODE_EXPORTER_VERSION="1.8.1"
+# wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_export…
+# tar -xvzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+# cp node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
+# chown node_exporter:node_exporter /usr/local/bin/node_exporter
+ 
+# # Create systemd service
+# cat <<EOF > /etc/systemd/system/node_exporter.service
+# [Unit]
+# Description=Node Exporter
+# After=network.target
+ 
+# [Service]
+# User=node_exporter
+# Group=node_exporter
+# Type=simple
+# ExecStart=/usr/local/bin/node_exporter
+ 
+# [Install]
+# WantedBy=multi-user.target
+# EOF
+ 
+# # Reload and start Node Exporter
+# systemctl daemon-reexec
+# systemctl daemon-reload
+# systemctl enable --now node_exporter
+ 
+# echo "[INFO] All services installed and running."
+ 
+ 

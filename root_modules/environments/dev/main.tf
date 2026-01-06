@@ -123,13 +123,13 @@ module "security" {
 module "ec2" {
   source = "../../../modules/ec2"
  
-  ResourcePrefix             = "GNPC-Dev"
+  ResourcePrefix             = "CBG-Dev"
   ami_ids                    = ["ami-08b5b3a93ed654d19", "ami-02a53b0d62d37a757", "ami-02e3d076cbd5c28fa", "ami-0c7af5fe939f2677f", "ami-04b4f1a9cf54c11d0"]
   ami_names                  = ["AL2023", "AL2", "Windows", "RedHat", "ubuntu"]
   instance_types             = ["t2.micro", "t2.micro", "t2.micro", "t2.micro", "t2.micro"]
   key_name                   = "safoa"
   instance_profile_name      = "admin_role"   #module.iam.rbac_instance_profile
-  public_instance_count      = [0, 0, 0, 0, 1]
+  public_instance_count      = [1, 0, 0, 0, 0]
   private_instance_count     = [0, 0, 0, 0, 0]
  
   tag_value_public_instances = [
