@@ -117,7 +117,12 @@ module "security" {
 #   replication_role_arn          = module.iam.replication_role_arn
 # }
 
+# Existing Iam Instance profile
+data "aws_iam_instance_profile" "admin" {
+  name = "admin_role"
+}
 
+ 
 
 # # EC2 Module
 module "ec2" {
@@ -128,7 +133,7 @@ module "ec2" {
   ami_names                  = ["AL2023", "AL2", "Windows", "RedHat", "ubuntu"]
   instance_types             = ["t2.micro", "t2.micro", "t2.micro", "t2.micro", "t2.micro"]
   key_name                   = "safoa"
-  instance_profile_name      = "admin_role"   #module.iam.rbac_instance_profile
+  instance_profile_name      = data.aws_iam_instance_profile.admin.name   #module.iam.rbac_instance_profile
   public_instance_count      = [1, 0, 0, 0, 0]
   private_instance_count     = [0, 0, 0, 0, 0]
  
